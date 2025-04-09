@@ -48,13 +48,11 @@ class DepsInstaller:
             try:
                 git = GIT  .get()
                 mvn = MAVEN.get()
-                subprocess.run([git,'clone',dep_info.url,temp_dir_name],
+                subprocess.run([git,'clone',dep_info.url,temp_dir_name,'--branch',dep_info.version(dep.version),'--depth','1'],
                             shell=True)
                 wd = os.getcwd()
                 os.chdir(temp_dir_name)
                 try:
-                    subprocess.run([git,'checkout',dep_info.version(dep.version)],
-                                   shell=True)
                     subprocess.run([mvn,'install'],
                                    shell=True)
                     if DEPS_MAPFILE_NAME_STANDARD in os.listdir():
