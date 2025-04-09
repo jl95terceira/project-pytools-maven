@@ -43,7 +43,7 @@ class DepsInstaller:
                 continue
 
             dep_info = DepInfo(deps_map[dep_key])
-            temp_dir_name = str(uuid.uuid4())
+            temp_dir_name = f'_dep-{dep.group_id}-{dep.artifact_id}-{str(uuid.uuid4())}'
             git = GIT  .get()
             mvn = MAVEN.get()
             os.makedirs(temp_dir_name)
