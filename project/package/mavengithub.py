@@ -44,10 +44,10 @@ class DepsInstaller:
 
             dep_info = DepInfo(deps_map[dep_key])
             temp_dir_name = str(uuid.uuid4())
+            git = GIT  .get()
+            mvn = MAVEN.get()
             os.makedirs(temp_dir_name)
             try:
-                git = GIT  .get()
-                mvn = MAVEN.get()
                 subprocess.run([git,'clone',dep_info.url,temp_dir_name,'--branch',dep_info.version(dep.version),'--depth','1'],
                             shell=True)
                 wd = os.getcwd()
@@ -62,7 +62,7 @@ class DepsInstaller:
                 finally:
                     os.chdir(wd)
             finally:
-                shutil.rmtree(temp_dir_name)
+                subprocess.run([git,'clean','-ff',temp_dir_name],shell=True)
 
     def install_deps_by_mapfile_path(self, deps_mapfile_path:str):
 
