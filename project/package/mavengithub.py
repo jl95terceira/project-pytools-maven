@@ -53,7 +53,7 @@ class DepsInstaller:
                 wd = os.getcwd()
                 os.chdir(temp_dir_name)
                 try:
-                    subprocess.run([mvn,'install'],
+                    subprocess.run([mvn,'install','-Dmaven.test.skip=true'],
                                    shell=True)
                     if DEPS_MAPFILE_NAME_STANDARD in os.listdir():
 
