@@ -27,7 +27,7 @@ class DepsInstaller:
 
     def __init__(self, project_dir:str):
 
-        self._pom = maven.Pom(os.path.join(project_dir if project_dir is not None else os.getcwd(), 'pom.xml'))
+        self._pom = maven.Pom.from_project_dir(project_dir if project_dir is not None else os.getcwd())
 
     def install_deps_by_map(self, deps_map:dict[tuple[str,str],dict[str,typing.Any]]):
 
