@@ -8,12 +8,10 @@ import typing
 import uuid
 import xml.etree.ElementTree as et
 
-from jl95terceira.pytools import maven, mavengithub
-from jl95terceira.pytools.envlib.vars.git  import GIT
-from jl95terceira.pytools.envlib.vars.java import MAVEN
+from jl95terceira.pytools import maven
 from jl95terceira.batteries import *
 
-DEFAULT_DEST_RELATIVE = os.path.join('target','dep')
+DEFAULT_DEST_RELATIVE = 'target'
 
 def do_it(pom_path:str,
           dest:str):
