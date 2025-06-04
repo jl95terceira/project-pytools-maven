@@ -84,7 +84,7 @@ def get_local_dependency_path(dep:PomDependency):
 
 def is_installed(dep:PomDependency):
 
-    return os.path.exists(get_local_dependency_path())
+    return os.path.exists(get_local_dependency_path(dep))
 
 def get_local_jar_path(dep:PomDependency):
 
