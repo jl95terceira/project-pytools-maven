@@ -29,17 +29,19 @@ class DepsInstaller:
 
         self._pom = maven.Pom.from_project_dir(project_dir if project_dir is not None else os.getcwd())
 
-    def install_deps_by_map(self, deps_map:dict[tuple[str,str],dict[str,typing.Any]]):
+    def install_deps_by_map(self, deps_map:dict[tuple[str,str],dict[str,typing.Any]],force=False):
 
         for dep in self._pom.dependencies():
 
-            if maven.is_installed(dep): # already installed
+            if not force and maven.is_installed(dep): # already installed
                 
+                print(f'{repr(dep)} appears to be installed already - continue')
                 continue
 
             dep_key = (dep.group_id,dep.artifact_id)
             if dep_key not in deps_map: # not to look up
                 
+                print(f'{repr(dep_key)} not found in dependencies map - continue')
                 continue
 
             dep_info = DepInfo(deps_map[dep_key])
@@ -57,33 +59,34 @@ class DepsInstaller:
                                    shell=True)
                     if DEPS_MAPFILE_NAME_STANDARD in os.listdir():
 
-                        DepsInstaller(os.getcwd()).install_deps()
+                        DepsInstaller(os.getcwd()).install_deps(force=force)
 
                 finally:
                     os.chdir(wd)
             finally:
                 subprocess.run([git,'clean','-ff',temp_dir_name],shell=True)
 
-    def install_deps_by_mapfile_path(self, deps_mapfile_path:str):
+    def install_deps_by_mapfile_path(self, deps_mapfile_path:str, force=False):
 
         with open(deps_mapfile_path, mode='r') as fr:
 
             deps_map_raw:dict[str,typing.Any] = json.load(fr)
             deps_map = dict((tuple(k.split(':')[:2]),v) for k,v in deps_map_raw.items())
 
-        self.install_deps_by_map(deps_map)
+        self.install_deps_by_map(deps_map,force=force)
 
-    def install_deps(self, project_dir:str):
+    def install_deps(self, project_dir:str, force=False):
 
-        self.install_deps_by_mapfile_path(os.path.join(project_dir, DEPS_MAPFILE_NAME_STANDARD))
+        self.install_deps_by_mapfile_path(os.path.join(project_dir, DEPS_MAPFILE_NAME_STANDARD),force=force)
 
 if __name__ == '__main__':
 
     p = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                 description='Download and build Maven dependencies from their corresponding Github projects')
     class A:
-        DEPS_MAPFILE = 'mapfile'
-        PROJECT_DIR  = 'wd'
+        DEPS_MAPFILE  = 'mapfile'
+        PROJECT_DIR   = 'wd'
+        FORCE_INSTALL = 'force'
     class Defaults:
         DEPS_MAPFILE = DEPS_MAPFILE_NAME_STANDARD
     p.add_argument(f'--{A.PROJECT_DIR}',
@@ -91,9 +94,13 @@ if __name__ == '__main__':
     p.add_argument(f'--{A.DEPS_MAPFILE}',
                    help=f'Path of dependencies map file to consider, relative to working directory, if different from the standard ({Defaults.DEPS_MAPFILE})',
                    default=Defaults.DEPS_MAPFILE)
+    p.add_argument(f'--{A.FORCE_INSTALL}',
+                   help=f'Force install dependencies that appear to be installed already',
+                   action='store_true')
     # parse
     get = p.parse_args().__getattribute__
     project_dir       = get(A.PROJECT_DIR)
     deps_mapfile_path = get(A.DEPS_MAPFILE)
+    force             = get(A.FORCE_INSTALL)
     # do it
-    DepsInstaller(project_dir).install_deps_by_mapfile_path(deps_mapfile_path=deps_mapfile_path)
+    DepsInstaller(project_dir).install_deps_by_mapfile_path(deps_mapfile_path=deps_mapfile_path,force=force)
