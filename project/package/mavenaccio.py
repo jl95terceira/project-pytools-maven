@@ -22,7 +22,7 @@ def do_it(pom_path:str,
 
         shutil.copy(maven.get_local_jar_path(dep), dest)
 
-if __name__ == '__main__':
+def main():
 
     p = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                 description='Download and build Maven dependencies from their corresponding Github projects')
@@ -41,3 +41,5 @@ if __name__ == '__main__':
     # do it
     do_it(pom_path,
           target_path)
+
+if __name__ == '__main__': main()

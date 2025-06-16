@@ -114,7 +114,7 @@ def do_it(wd      :str,
                     '--file', get_pom_path_by_project_dir(wd),
                     *options,), shell=True)
 
-if __name__ == '__main__':
+def main():
 
     import argparse
     import jl95terceira.pytools.envlib.vars.java as envars_java
@@ -160,3 +160,5 @@ if __name__ == '__main__':
                         get(A.JDK_HOME)                if get(A.JDK_HOME)      is not None else os.environ['JAVA_HOME'],
           maven        =envars_java.MAVEN    .get()    if get(A.MAVEN)         is     None else get(A.MAVEN),
           options      =get(A.OPTIONS))
+
+if __name__ == '__main__': main()

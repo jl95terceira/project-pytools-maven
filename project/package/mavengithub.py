@@ -79,7 +79,7 @@ class DepsInstaller:
 
         self.install_deps_by_mapfile_path(os.path.join(project_dir, DEPS_MAPFILE_NAME_STANDARD),force=force)
 
-if __name__ == '__main__':
+def main():
 
     p = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                 description='Download and build Maven dependencies from their corresponding Github projects')
@@ -104,3 +104,5 @@ if __name__ == '__main__':
     force             = get(A.FORCE_INSTALL)
     # do it
     DepsInstaller(project_dir).install_deps_by_mapfile_path(deps_mapfile_path=deps_mapfile_path,force=force)
+
+if __name__ == '__main__': main()
