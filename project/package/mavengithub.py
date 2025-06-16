@@ -13,7 +13,7 @@ from jl95terceira.pytools.envlib.vars.git  import GIT
 from jl95terceira.pytools.envlib.vars.java import MAVEN
 from jl95terceira.batteries import *
 
-DEPS_MAPFILE_NAME_STANDARD = 'depsmap.json'
+DEPSMAP_FILENAME_STANDARD = 'depsmap.json'
 
 class DepInfo:
 
@@ -25,9 +25,10 @@ class DepInfo:
 
 class DepsInstaller:
 
-    def __init__(self, project_dir:str):
+    def __init__(self, project_dir:str|None=None):
 
-        self._pom = maven.Pom.from_project_dir(project_dir if project_dir is not None else os.getcwd())
+        self._project_dir = project_dir if project_dir is not None else os.getcwd()
+        self._pom = maven.Pom.from_project_dir(self._project_dir)
 
     def install_deps_by_map(self, deps_map:dict[tuple[str,str],dict[str,typing.Any]],force=False):
 
@@ -57,7 +58,7 @@ class DepsInstaller:
                 try:
                     subprocess.run([mvn,'install','-Dmaven.test.skip=true'],
                                    shell=True)
-                    if DEPS_MAPFILE_NAME_STANDARD in os.listdir():
+                    if DEPSMAP_FILENAME_STANDARD in os.listdir():
 
                         DepsInstaller(os.getcwd()).install_deps(force=force)
 
@@ -66,18 +67,18 @@ class DepsInstaller:
             finally:
                 subprocess.run([git,'clean','-ff',temp_dir_name],shell=True)
 
-    def install_deps_by_mapfile_path(self, deps_mapfile_path:str, force=False):
+    def install_deps_by_mapfile_path(self, depsmap_path, force=False):
 
-        with open(deps_mapfile_path, mode='r') as fr:
+        with open(depsmap_path, mode='r') as fr:
 
             deps_map_raw:dict[str,typing.Any] = json.load(fr)
             deps_map = dict((tuple(k.split(':')[:2]),v) for k,v in deps_map_raw.items())
 
         self.install_deps_by_map(deps_map,force=force)
 
-    def install_deps(self, project_dir:str, force=False):
+    def install_deps(self, force=False):
 
-        self.install_deps_by_mapfile_path(os.path.join(project_dir, DEPS_MAPFILE_NAME_STANDARD),force=force)
+        self.install_deps_by_mapfile_path(os.path.join(self._project_dir, DEPSMAP_FILENAME_STANDARD),force=force)
 
 def main():
 
@@ -88,7 +89,7 @@ def main():
         PROJECT_DIR   = 'wd'
         FORCE_INSTALL = 'force'
     class Defaults:
-        DEPS_MAPFILE = DEPS_MAPFILE_NAME_STANDARD
+        DEPS_MAPFILE = DEPSMAP_FILENAME_STANDARD
     p.add_argument(f'--{A.PROJECT_DIR}',
                    help=f'Project / working dir\nDefault: current directory')
     p.add_argument(f'--{A.DEPS_MAPFILE}',
@@ -103,6 +104,6 @@ def main():
     deps_mapfile_path = get(A.DEPS_MAPFILE)
     force             = get(A.FORCE_INSTALL)
     # do it
-    DepsInstaller(project_dir).install_deps_by_mapfile_path(deps_mapfile_path=deps_mapfile_path,force=force)
+    DepsInstaller(project_dir).install_deps_by_mapfile_path(depsmap_path=deps_mapfile_path,force=force)
 
 if __name__ == '__main__': main()
