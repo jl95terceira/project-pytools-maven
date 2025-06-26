@@ -1,6 +1,8 @@
 import dataclasses
+import functools
 import os
 import os.path
+import re
 import subprocess
 import xml.etree.ElementTree as et
 
@@ -17,8 +19,10 @@ class Pom:
 
     ns = '{http://maven.apache.org/POM/4.0.0}'
 
-    def __init__(self,pom_path:str):
+    def __init__(self,pom_path:str|None=None):
 
+        if pom_path is None:
+            pom_path = 'pom.xml'
         with open(os.path.join(pom_path), 'r', encoding='utf-8') as f:
 
             self.et = et.parse(f)
@@ -28,23 +32,45 @@ class Pom:
 
         return Pom(get_pom_path_by_project_dir(pd))
 
+    @functools.cache
+    def properties(self):
+
+        properties:dict[str,str] = dict()
+        e = self.et.find(f'{Pom.ns}properties')
+        if e is not None:
+            for e2 in e:
+                properties[e2.tag if not e2.tag.startswith(Pom.ns) else e2.tag[len(Pom.ns):]] = e2.text
+        return properties
+
+    def eval(self, text:str):
+
+        return re.sub(pattern='\\$\\{(?P<property>.*?)\\}', repl=lambda m: self.properties()[m.group('property')], string=text)
+
+    @functools.cache
     def version(self): return self.et.find(f'{Pom.ns}version').text
 
+    @functools.cache
     def repo_ids(self):
 
         repos = self.et.find(f'{Pom.ns}repositories')
         if repos is None: return None
         return list(map(lambda repo: repo.find(f'{Pom.ns}id').text, repos.findall(f'{Pom.ns}repository')))
     
+    @functools.cache
     def build(self): return self.et.find(f'{Pom.ns}build')
 
+    @functools.cache
     def build_plugins(self): return self.build().find(f'{Pom.ns}plugins')
 
+    @functools.cache
     def dependencies(self): return map(lambda dependency_elem: PomDependency(group_id   =_find_text_or(dependency_elem, f'{Pom.ns}groupId'   , None),
                                                                              artifact_id=_find_text_or(dependency_elem, f'{Pom.ns}artifactId', None),
                                                                              version    =_find_text_or(dependency_elem, f'{Pom.ns}version'   , None),
-                                                                             scope      =_find_text_or(dependency_elem, f'{Pom.ns}scope'     , None)), self.et.find(f'{Pom.ns}dependencies').findall(f'{Pom.ns}dependency'))
+                                                                             scope      =_find_text_or(dependency_elem, f'{Pom.ns}scope'     , None)), 
+        (lambda dependencies: ((dependencies.findall(f'{Pom.ns}dependency')) if dependencies is not None else \
+                               list()))(self.et.find(f'{Pom.ns}dependencies')))
 
+    @functools.cache
     def gpg_key_name(self):
 
         gpg_configuration = None
@@ -86,9 +112,20 @@ def is_installed(dep:PomDependency):
 
     return os.path.exists(get_local_dependency_path(dep))
 
+class LocalDependencyFilePath:
+
+    def __init__(self, dep:PomDependency):
+        self._dep = dep
+    def get(self, ext:str):
+        return os.path.join(get_local_dependency_path(self._dep), f'{self._dep.artifact_id}-{self._dep.version}.{ext}')
+
 def get_local_jar_path(dep:PomDependency):
 
-    return os.path.join(get_local_dependency_path(dep), f'{dep.artifact_id}-{dep.version}.jar')
+    return LocalDependencyFilePath(dep).get('jar')
+
+def get_local_pom_path(dep:PomDependency):
+
+    return LocalDependencyFilePath(dep).get('pom')
 
 def find_project_root(wd:str=None):
 

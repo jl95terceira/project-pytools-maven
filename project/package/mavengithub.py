@@ -34,11 +34,8 @@ class DepsInstaller:
 
         for dep in self._pom.dependencies():
 
-            if not force and maven.is_installed(dep): # already installed
-                
-                print(f'{repr(dep)} appears to be installed already - continue')
-                continue
-
+            is_installed = maven.is_installed(dep)
+            to_install = force or not is_installed
             dep_key = (dep.group_id,dep.artifact_id)
             if dep_key not in deps_map: # not to look up
                 
@@ -51,13 +48,22 @@ class DepsInstaller:
             mvn = MAVEN.get()
             os.makedirs(temp_dir_name)
             try:
+
                 subprocess.run([git,'clone',dep_info.url,temp_dir_name,'--branch',dep_info.version(dep.version),'--depth','1'],
                             shell=True)
                 wd = os.getcwd()
                 os.chdir(temp_dir_name)
                 try:
-                    subprocess.run([mvn,'install','-Dmaven.test.skip=true'],
-                                   shell=True)
+
+                    if to_install:
+                        
+                        subprocess.run([mvn,'install','-Dmaven.test.skip=true'],
+                                    shell=True)
+                        
+                    elif is_installed:
+
+                        print(f'{repr(dep_key)} already installed')
+
                     if DEPSMAP_FILENAME_STANDARD in os.listdir():
 
                         DepsInstaller(os.getcwd()).install_deps(force=force)
