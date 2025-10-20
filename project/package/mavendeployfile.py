@@ -1,12 +1,12 @@
 import os
 
-def main(fn        :str,
-         repo_id   :str,
-         repo_url  :str,
-         a_group_id:str,
-         a_id      :str,
-         a_version :str,
-         packaging='jar'):
+def do_it(fn        :str,
+          repo_id   :str,
+          repo_url  :str,
+          a_group_id:str,
+          a_id      :str,
+          a_version :str,
+          packaging='jar'):
 
     os.system('mvn -X deploy:deploy-file {}'.format(' '.join((
 
@@ -21,7 +21,7 @@ def main(fn        :str,
     ))))
 
 
-if __name__ == '__main__':
+def main():
 
     import argparse
 
@@ -48,9 +48,11 @@ if __name__ == '__main__':
     p.add_argument(f'{A.ARTIFACT_VERSION}',
                    help='file artifact version')
     get = p.parse_args().__getattribute__
-    main(fn        =get(A.FILE),
+    do_it(fn       =get(A.FILE),
          repo_id   =get(A.REPOSITORY_ID),
          repo_url  =get(A.REPOSITORY_URL),
          a_group_id=get(A.ARTIFACT_GROUP_ID),
          a_id      =get(A.ARTIFACT_ID),
          a_version =get(A.ARTIFACT_VERSION))
+
+if __name__ == '__main__': main()
