@@ -66,7 +66,10 @@ def foo(x:str):
 
 def is_installed(dep:PomDependency):
 
-    return os.path.exists(os.path.join(os.path.expanduser('~'), '.m2', 'repository', *dep.group_id.split('.'), dep.artifact_id, dep.version))
+    return os.path.exists(os.path.join(os.path.expanduser('~'), 
+                                       '.m2', 'repository', 
+                                       *dep.group_id.split('.'), dep.artifact_id, dep.version,
+                                       f'{dep.artifact_id}-{dep.version}.jar'))
 
 def find_root(wd:str=None):
 
