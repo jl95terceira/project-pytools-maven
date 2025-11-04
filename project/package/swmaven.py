@@ -2,8 +2,8 @@ import os
 import os.path
 import typing
 
-import swjava
-import swxml
+from jl95.pytools import swjava
+from jl95.pytools import swxml
 
 def do_it(wd     :str,
           enable :typing.Callable[[str],bool],

@@ -3,7 +3,7 @@ import os
 import os.path
 import typing
 
-import ppjava
+from jl95.pytools import ppjava
 
 GUIDE_FILE_NAME = '__pp__.py'
 
