@@ -8,8 +8,8 @@ import typing
 import uuid
 import xml.etree.ElementTree as et
 
-from jl95.pytools import maven
-from jl95.batteries import *
+from jl95terceira.pytools import maven
+from jl95terceira.batteries import *
 
 DEFAULT_DEST_RELATIVE = 'target'
 
