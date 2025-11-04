@@ -6,7 +6,7 @@ import re
 import subprocess
 import xml.etree.ElementTree as et
 
-from jl95.batteries import *
+from jl95terceira.batteries import *
 
 MAVEN_LOCAL_REPO_PATH = os.path.join(os.path.expanduser('~'), '.m2','repository')
 
@@ -39,7 +39,7 @@ class Pom:
         e = self.et.find(f'{Pom.ns}properties')
         if e is not None:
             for e2 in e:
-                properties[e2.tag if not e2.tag.startswith(Pom.ns) else e2.tag[len(Pom.ns):]] = e2.text if e2.text is not None else ''
+                properties[e2.tag if not e2.tag.startswith(Pom.ns) else e2.tag[len(Pom.ns):]] = e2.text
         return properties
 
     def eval(self, text:str):
@@ -47,9 +47,7 @@ class Pom:
         return re.sub(pattern='\\$\\{(?P<property>.*?)\\}', repl=lambda m: self.properties()[m.group('property')], string=text)
 
     @functools.cache
-    def version(self): 
-        version_element = self.et.find(f'{Pom.ns}version')
-        return version_element.text if version_element is not None else None
+    def version(self): return self.et.find(f'{Pom.ns}version').text
 
     @functools.cache
     def repo_ids(self):
@@ -157,8 +155,7 @@ def do_it(wd      :str,
 def main():
 
     import argparse
-    import jl95.pytools.envlib.vars as vars
-    import jl95.pytools.envlib.vars.java
+    import jl95terceira.pytools.envlib.vars.java as envars_java
 
     class A:
 
@@ -174,7 +171,7 @@ def main():
                    help   =f'working directory',
                    default='.')
     p.add_argument(f'--{A.JDK}',
-                   help   =f'JDK version to use\nFor this option to work, the given JDK version\'s home must be mapped in variable {repr(vars.java.JDK_HOMES._name)}.',
+                   help   =f'JDK version to use\nFor this option to work, the given JDK version\'s home must be mapped in variable {repr(envars_java.JDK_HOMES._name)}.',
                    default=None)
     p.add_argument(f'--{A.JDK_HOME}',
                    help   =f'home of JDK to use\nThis option is an alternative to option {repr('jdk')}',
@@ -196,10 +193,10 @@ def main():
 
     # do it
     do_it(wd           =get(A.WORKING_DIRECTORY),
-          jdk_home     =vars.java.JDK_HOMES.get()\
+          jdk_home     =envars_java.JDK_HOMES.get()\
                        [get(A.JDK)]                    if get(A.JDK)           is not None else \
                         get(A.JDK_HOME)                if get(A.JDK_HOME)      is not None else os.environ['JAVA_HOME'],
-          maven        =vars.java.MAVEN    .get()    if get(A.MAVEN)         is     None else get(A.MAVEN),
+          maven        =envars_java.MAVEN    .get()    if get(A.MAVEN)         is     None else get(A.MAVEN),
           options      =get(A.OPTIONS))
 
 if __name__ == '__main__': main()

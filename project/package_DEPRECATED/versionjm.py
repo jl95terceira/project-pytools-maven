@@ -2,8 +2,8 @@ import os
 import os.path
 import xml.etree.ElementTree as et
 
-from jl95.pytools import version as version_
-from jl95.pytools import maven
+from jl95terceira.pytools import version as version_
+from jl95terceira.pytools import maven
 
 def _get_version(wd:str):
 

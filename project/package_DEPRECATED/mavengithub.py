@@ -8,10 +8,10 @@ import typing
 import uuid
 import xml.etree.ElementTree as et
 
-from jl95.pytools import maven
-from jl95.pytools.envlib.vars.git  import GIT
-from jl95.pytools.envlib.vars.java import MAVEN
-from jl95.batteries import *
+from jl95terceira.pytools import maven
+from jl95terceira.pytools.envlib.vars.git  import GIT
+from jl95terceira.pytools.envlib.vars.java import MAVEN
+from jl95terceira.batteries import *
 
 DEPSMAP_FILENAME_STANDARD = 'depsmap.json'
 
