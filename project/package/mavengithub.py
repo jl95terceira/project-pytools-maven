@@ -12,6 +12,7 @@ from jl95.pytools import maven
 from jl95.pytools.envlib.vars.git  import GIT
 from jl95.pytools.envlib.vars.java import MAVEN
 from jl95.batteries import *
+from jl95.batteries import os
 
 DEPSMAP_FILENAME_STANDARD = 'depsmap.json'
 
@@ -37,13 +38,15 @@ class DepsInstaller:
             is_installed = maven.is_installed(dep)
             to_install = force or not is_installed
             dep_key = (dep.group_id,dep.artifact_id)
+            dep_key_str = ':'.join(dep_key)
             if dep_key not in deps_map: # not to look up
                 
-                print(f'{repr(dep_key)} not found in dependencies map - continue')
+                print(f'{dep_key_str} NOT found in dependencies map - continue')
                 continue
 
+            print(f'{dep_key_str} found in dependencies map')
             dep_info = DepInfo(deps_map[dep_key])
-            temp_dir_name = f'_dep-{dep.group_id}-{dep.artifact_id}-{str(uuid.uuid4())}'
+            temp_dir_name = os.path.join(os.TEMP_DIR, f'_dep-{dep.group_id}-{dep.artifact_id}-{str(uuid.uuid4())}')
             git = GIT  .get()
             mvn = MAVEN.get()
             os.makedirs(temp_dir_name)
@@ -52,21 +55,25 @@ class DepsInstaller:
                 subprocess.run([git,'clone',dep_info.url,temp_dir_name,'--branch',dep_info.version(dep.version),'--depth','1'],
                             shell=True)
                 wd = os.getcwd()
-                os.chdir(temp_dir_name)
                 try:
+
+                    os.chdir(temp_dir_name)
+                    if DEPSMAP_FILENAME_STANDARD in os.listdir():
+
+                        print(f'Dependency map file found for {dep_key_str} - installing its dependencies recursively')
+                        DepsInstaller(os.getcwd()).install_deps(force=force)
+                        os.chdir(temp_dir_name) # ensure in the right dir
 
                     if to_install:
                         
+                        print('Installing dependency:', dep_key_str)
+                        print('Current working dir:', os.getcwd())
                         subprocess.run([mvn,'install','-Dmaven.test.skip=true'],
                                     shell=True)
                         
                     elif is_installed:
 
                         print(f'{repr(dep_key)} already installed')
-
-                    if DEPSMAP_FILENAME_STANDARD in os.listdir():
-
-                        DepsInstaller(os.getcwd()).install_deps(force=force)
 
                 finally:
                     os.chdir(wd)
