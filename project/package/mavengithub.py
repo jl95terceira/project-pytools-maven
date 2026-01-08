@@ -33,7 +33,9 @@ class DepsInstaller:
 
     def install_deps_by_map(self, deps_map:dict[tuple[str,str],dict[str,typing.Any]],force=False):
 
-        for dep in self._pom.dependencies():
+        dependencies = list(self._pom.dependencies())
+        print(f'Dependencies:\n{'\n'.join(f'  {repr(dep)}' for dep in dependencies)}')
+        for dep in dependencies:
 
             is_installed = maven.is_installed(dep)
             to_install = force or not is_installed
@@ -50,35 +52,39 @@ class DepsInstaller:
             git = GIT  .get()
             mvn = MAVEN.get()
             os.makedirs(temp_dir_name)
+            wd = os.getcwd()
             try:
 
-                subprocess.run([git,'clone',dep_info.url,temp_dir_name,'--branch',dep_info.version(dep.version),'--depth','1'],
+                subprocess.run([git,'clone',dep_info.url,temp_dir_name,
+                                '--branch',dep_info.version(dep.version),
+                                '--depth','1',
+                                '--quiet'],
                             shell=True)
-                wd = os.getcwd()
-                try:
+                os.chdir(temp_dir_name)
+                if DEPSMAP_FILENAME_STANDARD in os.listdir():
 
-                    os.chdir(temp_dir_name)
-                    if DEPSMAP_FILENAME_STANDARD in os.listdir():
+                    print(f'Dependency map file found for {dep_key_str} - installing its dependencies recursively')
+                    DepsInstaller(os.getcwd()).install_deps(force=force)
+                    os.chdir(temp_dir_name) # ensure in the right dir
 
-                        print(f'Dependency map file found for {dep_key_str} - installing its dependencies recursively')
-                        DepsInstaller(os.getcwd()).install_deps(force=force)
-                        os.chdir(temp_dir_name) # ensure in the right dir
+                if to_install:
+                    
+                    print('Installing dependency:', dep_key_str)
+                    print('Current working dir:', os.getcwd())
+                    subprocess.run([mvn,'install',
+                                    '-Dmaven.test.skip=true'],
+                                   shell=True)
+                    
+                elif is_installed:
 
-                    if to_install:
-                        
-                        print('Installing dependency:', dep_key_str)
-                        print('Current working dir:', os.getcwd())
-                        subprocess.run([mvn,'install','-Dmaven.test.skip=true'],
-                                    shell=True)
-                        
-                    elif is_installed:
+                    print(f'{repr(dep)} already installed')
 
-                        print(f'{repr(dep_key)} already installed')
-
-                finally:
-                    os.chdir(wd)
             finally:
-                subprocess.run([git,'clean','-ff',temp_dir_name],shell=True)
+
+                os.chdir(temp_dir_name) # ensure in the right dir
+                subprocess.run([git,'clean',
+                                '-ff'],shell=True)
+                os.chdir(wd)
 
     def install_deps_by_mapfile_path(self, depsmap_path, force=False):
 
