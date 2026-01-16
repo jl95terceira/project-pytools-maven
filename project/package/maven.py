@@ -147,12 +147,14 @@ def do_it(wd      :str,
     version  = pom.version()
     print(f'Version: {version}')
     repo_ids = pom.repo_ids()
-    print(f'Repository IDs: {repo_ids}')
+    if repo_ids is not None:
+        print(f'Repository IDs: {repo_ids}')
     os.environ['JAVA_HOME'] = jdk_home
     print(f'Java home: {repr(os.environ['JAVA_HOME'])}')
-    subprocess.run((maven, 
-                    '--file', get_pom_path_by_project_dir(wd),
-                    *options,), shell=True)
+    if options:
+        subprocess.run((maven, 
+                        '--file', get_pom_path_by_project_dir(wd),
+                        *options,), shell=True)
 
 def main():
 
